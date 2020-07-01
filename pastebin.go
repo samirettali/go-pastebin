@@ -26,6 +26,7 @@ type Paste struct {
 	FullURL   string `json:"full_url"`
 	ScrapeURL string `json:"scrape_url"`
 	Size      string `json:"size"`
+	Content   string
 }
 
 type Client struct {
