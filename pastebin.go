@@ -2,15 +2,16 @@ package pastebin
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net"
 	"net/http"
+	"strconv"
 	"time"
 )
 
 const (
 	scrapeURL = "https://scrape.pastebin.com/api_scraping.php?limit=250"
-	pasteURL  = "https://scrape.pastebin.com/api_scrape_item.php?i="
 )
 
 // Paste is a struct that represents a paste object from Pastebin's API.  I
@@ -75,11 +76,15 @@ func (c *Client) LatestPastes() ([]Paste, error) {
 	return pastes, nil
 }
 
-func (c *Client) GetPaste(key string) (string, error) {
-	resp, err := c.client.Get(pasteURL + key)
+func (c *Client) GetPaste(paste *Paste) (string, bool, error) {
+	resp, err := c.client.Get(paste.ScrapeURL)
 
 	if err != nil {
-		return "", err
+		return "", false, err
+	}
+
+	if resp.StatusCode == 429 {
+		return "", true, nil
 	}
 
 	defer resp.Body.Close()
@@ -87,8 +92,18 @@ func (c *Client) GetPaste(key string) (string, error) {
 	content, err := ioutil.ReadAll(resp.Body)
 
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
-	return string(content), nil
+	pasteLength, err := strconv.Atoi(paste.Size)
+	if err != nil {
+		return "", false, err
+	}
+
+	contentLength := len(string(content))
+	if contentLength != pasteLength {
+		return string(content), false, errors.New("Paste length does not match ")
+	}
+
+	return string(content), false, nil
 }
