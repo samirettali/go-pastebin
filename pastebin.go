@@ -2,11 +2,9 @@ package pastebin
 
 import (
 	"encoding/json"
-	"errors"
 	"io/ioutil"
 	"net"
 	"net/http"
-	"strconv"
 	"time"
 )
 
@@ -93,16 +91,6 @@ func (c *Client) GetPaste(paste *Paste) (string, bool, error) {
 
 	if err != nil {
 		return "", false, err
-	}
-
-	pasteLength, err := strconv.Atoi(paste.Size)
-	if err != nil {
-		return "", false, err
-	}
-
-	contentLength := len(string(content))
-	if contentLength != pasteLength {
-		return string(content), false, errors.New("Paste length does not match ")
 	}
 
 	return string(content), false, nil
